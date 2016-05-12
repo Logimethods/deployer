@@ -3,7 +3,7 @@ services:
     spark-master:
       container_name: master
       image: logimethods/docker-bigdata:latest
-      command: /usr/local/spark/bin/spark-class org.apache.spark.deploy.master.Master -h master
+      command: spark-class org.apache.spark.deploy.master.Master -h master
       hostname: master
       environment:
         - "constraint:node==swarm-master"
@@ -28,7 +28,7 @@ services:
 
     spark-slave:
       image: logimethods/docker-bigdata:latest
-      command: /usr/local/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://master:7077
+      command: spark-class org.apache.spark.deploy.worker.Worker spark://master:7077
       environment:
         - "SPARK_CONF_DIR: /conf"
         - "SPARK_WORKER_CORES: 2"
