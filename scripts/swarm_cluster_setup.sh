@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 
+# See https://github.com/docker/swarm/issues/2217
+swarm_version=1.2.0
+
 # Create the swarm master
 docker-machine create \
   -d virtualbox \
   --virtualbox-memory "2048" \
   --virtualbox-cpu-count "2" \
-  --swarm --swarm-image="swarm" --swarm-master \
+  --swarm --swarm-image="swarm:${swarm_version}" --swarm-master \
   --swarm-discovery="consul://$(docker-machine ip mh-keystore):8500" \
   --engine-opt="cluster-store=consul://$(docker-machine ip mh-keystore):8500" \
   --engine-opt="cluster-advertise=eth1:2376" \
@@ -18,7 +21,7 @@ do
     -d virtualbox \
     --virtualbox-memory "2048" \
     --virtualbox-cpu-count "2" \
-    --swarm --swarm-image="swarm:latest" \
+    --swarm --swarm-image="swarm:${swarm_version}" \
     --swarm-discovery="consul://$(docker-machine ip mh-keystore):8500" \
     --engine-opt="cluster-store=consul://$(docker-machine ip mh-keystore):8500" \
     --engine-opt="cluster-advertise=eth1:2376" \
