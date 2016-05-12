@@ -28,7 +28,7 @@ The cluster configuration should be visible by running:
 
 Deploy the containers on constrained nodes with:
 
-	docker-compose --x-networking --x-network-driver=overlay up -d
+	docker-compose up -d
 
 ## Deploy Cassandra
 
