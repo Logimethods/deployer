@@ -1,0 +1,100 @@
+version: '2'
+
+services:
+  monitoring: 
+    image: logimethods/docker-monitoring:latest
+    #image: local-docker-monitoring
+    ports:
+      - 80:80
+      - 8125:8125
+      - 81:81
+      - 2003:2003
+    volumes:
+      - monitoring_data:/opt/graphite/storage/whisper
+      - monitoring_data:/var/lib/elasticsearch
+      - monitoring_data:/opt/grafana/data
+      - monitoring_data:/opt/graphite/storage/log
+      - monitoring_data:/var/log/elasticsearch
+      
+  cassandra:
+    image: logimethods/docker-cassandra:latest
+    #image: local-docker-cassandra
+    ports:
+      - 7000:7000
+      - 7001:7001
+      - 7199:7199
+      - 9042:9042
+      - 9160:9160
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+      
+  zeppelin:
+    image: logimethods/docker-zeppelin:latest
+    #image: logimethods/docker-zeppelin:experiment
+    ports:
+      - 8080:8080
+      - 8081:8081
+    volumes:
+      - ./zeppelin/data:/zeppelin/data
+      - ./zeppelin/notebook:/zeppelin/notebook
+      - ./zeppelin/conf:/zeppelin/conf
+      - ./zeppelin/libs:/zeppelin/libs
+      
+  bigdata:
+    image: logimethods/docker-bigdata:latest
+    #image: local-bigdata
+    ports:
+      - 4040:4040
+    tty: true
+    stdin_open: true
+    #command: bash -c "sleep 60; ./inject.sh"
+    command: echo "Will stop"
+    #command: bash -c "cd /app; ./spark.sh"
+        
+  bridge: 
+    image: powerdata
+    #image: logimethods/docker-inject
+    ports:
+      - 9092:9092
+      - 9093:9093
+      - 9094:9094
+      - 2181:2181
+#      - 8080:8080
+#      - 8088:8088
+    environment:
+      - KAFKA_HOSTS=bridge:2181
+    command: sbt powerdata-app/aspectj-runner:run -Dcassandra.connection.host="cassandra"
+    
+  inject: 
+    image: powerdata
+    #image: logimethods/docker-inject
+    ports:
+      - 58592:58592
+      - 58593:58593
+#      - 8081:8080
+#      - 8089:8088
+    environment:
+      - KAFKA_HOSTS=bridge:2181
+    command: bash -c "sleep 15; sbt \"powerdata-clients/aspectj-runner:run-main com.logimethods.powerdata.client.FileDataInjectionApp\""
+    
+  powerdata: 
+    image: powerdata
+    #image: logimethods/docker-inject
+#    ports:
+#      - 58592:58592
+#      - 58593:58593
+#      - 8081:8080
+#      - 8089:8088
+#    environment:
+#      - KAFKA_HOSTS=bridge:2181,bridge:9092
+    command: bash -c "( sleep 15; sbt powerdata-app/aspectj-runner:run -Dcassandra.connection.host=\"cassandra\" ) ; sbt \"powerdata-clients/aspectj-runner:run-main com.logimethods.powerdata.client.FileDataInjectionApp\""
+    
+volumes:
+  cassandra_data:
+    # If [external] set to true, specifies that this volume has been created outside of Compose. 
+    # docker-compose up will not attempt to create it, and will raise an error if it doesn’t exist.
+    external: false
+  monitoring_data:
+    # If [external] set to true, specifies that this volume has been created outside of Compose. 
+    # docker-compose up will not attempt to create it, and will raise an error if it doesn’t exist.
+    external: false
